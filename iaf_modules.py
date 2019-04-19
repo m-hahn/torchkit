@@ -104,10 +104,10 @@ class MADE(Module):
         sequels = list()
         for i in range(num_layers-1):
             if i==0:
-                sequels.append(oper(dim, hid_dim, True, ms[i], False))
+                sequels.append(oper(dim, hid_dim, True, ms[i], norm=False))
                 sequels.append(activation)
             else:
-                sequels.append(oper(hid_dim, hid_dim, True, ms[i], False))
+                sequels.append(oper(hid_dim, hid_dim, True, ms[i], norm=False))
                 sequels.append(activation)
                 
         self.input_to_hidden = nn.Sequential(*sequels)
@@ -154,22 +154,28 @@ class cMADE(Module):
         for i in range(num_layers-1):
             if i==0:
                 sequels.append(oper(dim, hid_dim, context_dim, 
-                                    ms[i], False))
+                                    ms[i], norm=False))
                 sequels.append(self.activation)
             else:
                 sequels.append(oper(hid_dim, hid_dim, context_dim, 
-                                    ms[i], False))
+                                    ms[i], norm=False))
                 sequels.append(self.activation)
                 
         self.input_to_hidden = nn.Sequential(*sequels)
         self.hidden_to_output = oper(
-                hid_dim, dim*num_outlayers, context_dim, ms[-1])
+                hid_dim, dim*num_outlayers, context_dim, ms[-1], norm=False)
         
 
     def forward(self, inputs):
         input, context = inputs
         hid, _ = self.input_to_hidden((input, context))
+#        if torch.isnan(hid).any():
+#           assert False, hid
+
         out, _ = self.hidden_to_output((hid, context))
+#        if torch.isnan(out).any():
+#           assert False, out
+
         return out.view(-1, self.dim, self.num_outlayers), context
 
     def randomize(self):

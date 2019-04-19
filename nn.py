@@ -102,6 +102,7 @@ class CWNlinear(Module):
         self.out_features = out_features
         self.context_features = context_features
         self.register_buffer('mask',mask)
+        assert norm == False
         self.norm = norm
         self.direction = Parameter(torch.Tensor(out_features, in_features))
         self.cscale = nn.Linear(context_features, out_features)
@@ -127,6 +128,13 @@ class CWNlinear(Module):
             #weight = weight * getattr(self.mask,
             #                          ('cpu', 'cuda')[weight.is_cuda])()
             weight = weight * Variable(self.mask)
+#        if torch.isnan(scale).any():
+#           assert False, hid
+#        if torch.isnan(bias).any():
+#           assert False, bias
+#        if torch.isnan(weight).any():
+#           assert False, weight
+
         return scale * F.linear(input, weight, None) + bias, context
 
     def __repr__(self):
